@@ -203,7 +203,7 @@ def solve():
 
     SA_TIME = 0.30
     best=None
-    for split in range(1,111):                    
+    for split in range(1,101):                    
         # dynamic trial count 
         if   1<split<10:  trials=80
         elif 1<split<20:  trials=20
