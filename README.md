@@ -115,7 +115,7 @@ Feel free to adjust these values for your dataset and runtime budget.
 
 ## Performance
 
-* **Typical**: \~0.5 s for $N≈10^4$ on a moder laptop.
+* **Typical**: \~0.5 s for $N≈10^4$ on a modern laptop.
 * **Tuning**:
 
   * Lower `MAX_SPLIT` and `TRIALS_*` for speed.
