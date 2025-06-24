@@ -2,6 +2,9 @@
 import sys, math, heapq, random
 from collections import defaultdict, deque
 import time
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import streamlit as st
 
 #input
 if len(sys.argv) > 1:               
@@ -19,8 +22,6 @@ def perimeter_delta(neigh_cnt, s):
     return (4, 2, 0, -2)[neigh_cnt] * s if 0 <= neigh_cnt <= 3 else 0
 
 import random, math, time
-
-
 
 def has_hole(added, split):
     """Flood-fill on a (split+2)×(split+2) board: True → hole detected."""
@@ -240,8 +241,120 @@ def solve():
         for x1,y1,x2,y2 in edges:
             g.write(f"{x1:.6f} {y1:.6f} {x2:.6f} {y2:.6f}\n")
 
-if __name__=="__main__":
-    t0 = time.perf_counter()
-    solve()
-    t1 = time.perf_counter()
-    print(f"Execution time: {((t1 - t0)/60):.2f} minutes", file=sys.stderr)
+    # unpack
+    xs = [x for x, y, w in buildings]
+    ys = [y for x, y, w in buildings]
+    ws = [w for x, y, w in buildings]
+
+    plt.figure(figsize=(8,8))
+    # scatter buildings, colour by weight
+    sc = plt.scatter(xs, ys, c=ws, cmap='winter', s=20, edgecolors='k', linewidths=0.3)
+    plt.colorbar(sc, label='Building Cost')
+
+    # draw boundary
+    for x1, y1, x2, y2 in edges:
+        plt.plot([x1, x2], [y1, y2], '-', color='red', linewidth=2)
+
+    plt.axis('equal')
+    plt.title('Building Costs with Selected Area Boundary')
+    plt.xlabel('X coordinate')
+    plt.ylabel('Y coordinate')
+    plt.tight_layout()
+    plt.show()
+
+
+def read_input_from_text(text):
+    lines = text.strip().split('\n')
+    N, K = map(int, lines[0].split())
+    buildings = [tuple(map(int, line.split())) for line in lines[1:N+1]]
+    return N, K, buildings
+
+def solve_streamlit(N, K, buildings, sa_time_limit, min_split, max_split):
+    max_coord = max(max(x, y) for x, y, _ in buildings) + 1
+    best = None
+
+    for split in range(min_split, max_split + 1):
+        trials = 80 if 1 < split < 10 else 20 if 1 < split < 20 else 1
+        base_size = max_coord / split
+
+        for _ in range(trials):
+            factor = 1 - (0.01 / split * random.random()) if split > 4 else 1 - (0.0005 * random.random())
+            cell_size = base_size * factor
+            res = greedy(buildings, K, split, cell_size)
+            if res is None:
+                continue
+            g_cost, g_added, s, g_inside, cells = res
+            sa_added, sa_cost = sa_refine(g_added, s, cells, K, split, time_limit=sa_time_limit)
+            sa_inside = sum(cells[c]["cnt"] for c in sa_added)
+            if best is None or sa_cost < best[0]:
+                best = (sa_cost, sa_added, s, sa_inside)
+            elif g_cost < best[0]:
+                best = (g_cost, g_added, s, g_inside)
+
+    return best, buildings
+
+def main():
+    st.title("Polygon Selection Optimizer")
+
+    st.markdown("""
+    Upload your input or paste it below:
+    - First line: `N K`
+    - Next N lines: `x y w` for each building
+    """)
+
+    uploaded_file = st.file_uploader("Upload input file", type=["txt"])
+    text_input = st.text_area("Or paste input text here")
+
+    sa_time = st.slider("Simulated Annealing Time Limit (seconds)", 0.1, 2.0, 0.3, 0.05)
+    min_split = st.number_input("Minimum grid split", 1, 100, 1)
+    max_split = st.number_input("Maximum grid split", min_split, 100, 20)
+
+    if st.button("Run Optimization"):
+        if uploaded_file:
+            content = uploaded_file.read().decode("utf-8")
+        elif text_input:
+            content = text_input
+        else:
+            st.error("Please provide input data!")
+            return
+
+        N, K, buildings = read_input_from_text(content)
+        t0 = time.time()
+        best, buildings = solve_streamlit(N, K, buildings, sa_time, min_split, max_split)
+        t1 = time.time()
+
+        if best is None:
+            st.warning("No feasible solution found.")
+            return
+
+        cost, added, cell_sz, inside_cnt = best
+        edges = extract_boundary(added, cell_sz)
+
+        st.success(f"Cost: {cost:.6f}, Inside count: {inside_cnt}, Boundary edges: {len(edges)}")
+        st.text(f"Execution time: {(t1 - t0):.2f} seconds")
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+        xs = [x for x, y, w in buildings]
+        ys = [y for x, y, w in buildings]
+        ws = [w for x, y, w in buildings]
+
+        sc = ax.scatter(xs, ys, c=ws, cmap='winter_r', s=20, edgecolors='k', linewidths=0.3)
+        plt.colorbar(sc, ax=ax, label='Building Cost')
+
+        for x1, y1, x2, y2 in edges:
+            ax.plot([x1, x2], [y1, y2], '-', color='red', linewidth=2)
+
+        ax.set_aspect('equal')
+        ax.set_title('Building Costs with Selected Area Boundary')
+        ax.set_xlabel('X coordinate')
+        ax.set_ylabel('Y coordinate')
+        st.pyplot(fig)
+
+        # Optional download
+        output_lines = [f"{cost:.6f}\n{inside_cnt}\n{len(edges)}\n"] + \
+                       [f"{x1:.6f} {y1:.6f} {x2:.6f} {y2:.6f}\n" for x1,y1,x2,y2 in edges]
+        output_str = ''.join(output_lines)
+        st.download_button("Download Output", output_str, file_name="output.txt")
+
+if __name__ == "__main__":
+    main()
