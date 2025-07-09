@@ -18,8 +18,8 @@ Instead of searching over infinitely many polygons, we discretize space into gri
 5. [Dependencies](#dependencies)
 6. [Configuration](#configuration)
 7. [Documentation](#documentation)
-8. [Contributors](#contributors)
-9. [License](#license)
+
+
 
 ## Installation
 
@@ -148,7 +148,7 @@ We take the greedy set and refine it via local edge‐tweaks:
 
 Stop once time limit (default 0.3 s) or iteration cap is reached. Track the best encountered.
 
-### 6. Randomized Grid Shifting
+### 5. Randomized Grid Shifting
 
 To diversify starts, each trial uses
 
@@ -184,7 +184,5 @@ This **slightly shrinks** all cells, shifting grid lines so buildings near bound
 * **`extract_boundary(...)`**: traces polygon edges.
 * **Streamlit helpers**: `read_input_from_text`, `solve_streamlit`, `main`.
 
-## Contributors
 
-* **Your Name** – author & maintainer
 
