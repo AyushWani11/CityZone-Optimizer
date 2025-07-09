@@ -26,8 +26,8 @@ Instead of searching over infinitely many polygons, we discretize space into gri
 1. Clone the repo:
 
    ```bash
-   git clone https://github.com/yourusername/polygon-selection-optimizer.git
-   cd polygon-selection-optimizer
+   git clone https://github.com/AyushWani11/CityZone-Optimizer
+   cd CityZone-Optimizer
    ```
 2. (Optional) Create a virtual environment:
 
@@ -59,7 +59,7 @@ Instead of searching over infinitely many polygons, we discretize space into gri
 2. Run:
 
    ```bash
-   python3 optimize.py input.txt
+   python3 app.py input.txt
    ```
 3. Outputs both to stdout and `output.txt`:
 
@@ -71,7 +71,7 @@ Instead of searching over infinitely many polygons, we discretize space into gri
 ### Streamlit Web UI
 
 ```bash
-streamlit run optimize.py
+streamlit run app.py
 ```
 
 1. Upload/paste input.
